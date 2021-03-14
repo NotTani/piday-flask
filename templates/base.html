@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pi Day Game</title>
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+    <meta name="viewport" content="width=device-width">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Georgia", "Times New Roman", serif;
+            background-color: #eff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 300px;
+            width: 100%;
+        }
+
+        .container .pi {
+            font-size: 100px;
+            margin: 0;
+        }
+
+        .container h1, h2 {
+            text-align: center;
+        }
+
+        .button {
+            display: block;
+            text-align: center;
+            padding: 5px;
+            margin: 5px;
+            text-decoration: none;
+            color: black;
+            width: 100%;
+            border-radius: 5px;
+            background-color: white;
+            border: 1px solid slategrey;
+        }
+
+        .field {
+            width: 100%;
+            border-radius: 5px;
+            padding: 5px;
+            font-family: "Georgia", "Times New Roman", serif;
+            border: 1px solid slategrey;
+            font-size: 3em;
+        }
+
+        .noselect {
+            -webkit-touch-callout: none; /* iOS Safari */
+            -webkit-user-select: none; /* Safari */
+            -khtml-user-select: none; /* Konqueror HTML */
+            -moz-user-select: none; /* Old versions of Firefox */
+            -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+        }
+
+        .hidescroll {
+            overflow: hidden;
+        }
+
+        table, th, td {
+            border: 1px solid slategrey;
+            border-collapse: collapse;
+            padding: 5px;
+            word-wrap: break-word;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="pi">&pi;</h1>
+        {% block content %}
+
+        {% endblock %}
+    </div>
+    {% block end_of_body %}
+    {% endblock %}
+</body>
+</html>

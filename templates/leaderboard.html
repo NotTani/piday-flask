@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Pi Day Top 10 Leaderboard</h2>
+    <a href="{{ url_for('index') }}" class="button">Home</a>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 100%; text-align: left;">Name</th>
+                <th>Digits</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for score in leaderboard %}
+            <tr>
+                <td style="width: 100%;">{{ score.person }}</td>
+                <td>{{ score.digits | int }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

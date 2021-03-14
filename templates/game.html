@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <form method="post">
+        <div id="start_screen">
+            <h2>Game!</h2>
+            {% if request.args.get('submitted', None) %}
+                <p>Your high score has been submitted. Thank you for playing! Click Start below
+                to play again.</p>
+            {% else %}
+                <p>The game is simple! Simply copy the digits of Pi from the middle of the screen to the
+                    bottom, being careful not to make any mistakes.</p>
+            {% endif %}
+            <a class="button" href="#" onclick="startGame();">Start</a>
+        </div>
+        <div id="play_screen" style="display:none;">
+            <h2>Play!</h2>
+            <p style="text-align: center;">
+                <i>Time remaining:</i><br>
+                <span style="font-size: 50px;" id="time">-</span>s<br><br>
+                <i>Next digit:</i><br>
+                <span id="digit" style="font-size: 50px;">3</span>
+            </p>
+            <label for="typing_field">Start typing &pi; here:</label>
+            <input type="text" class="field" id="typing_field" autocomplete="off">
+            <p id="error" style="display: none;">Oops! You made a mistake. Please wait a moment.</p>
+        </div>
+        <div id="game_over_screen" style="display:none;">
+            <h2>Game over!</h2>
+            <p style="text-align: center;">
+                <i>Digits:</i><br>
+                <span id="gameover_digit" style="font-size: 50px;"></span>
+            </p>
+
+            <div id="game_over_high_score">
+                <p>
+                    <b>New high score for this browser!</b>
+                    <label for="display_name">Enter a name to save your score:</label>
+                    <input type="hidden" id="final" name="final_number">
+                    <input id="display_name" name="display_name" class="field" required>
+                    <input class="button" type="submit" value="Save score">
+                </p>
+            </div>
+
+            <div id="game_over_not_high_score">
+                You didn't surpass your high score of <span id="game_over_not_hs"></span>.
+                Want to try again?
+                <a href="." class="button">Play Again</a>
+                <a href="{{ url_for('index') }}" class="button">Return Home</a>
+            </div>
+
+        </div>
+    </form>
+{% endblock %}
+
+{% block end_of_body %}
+    <script>
+        const piDigits = "3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534" +
+            "211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196";
+
+        let current_position = 0;
+        let current_time = 0;
+        let end_time = 0;
+        let timer_interval = null;
+        let game_running = false;
+
+        // Love ya https://animate.style/
+        const animateCSS = (element, animation, animationEndHandler, prefix = 'animate__') =>
+            // We create a Promise and return it
+            new Promise((resolve, reject) => {
+                const animationName = `${prefix}${animation}`;
+                element.classList.remove(`${prefix}animated`, animationName);
+                element.classList.add(`${prefix}animated`, animationName);
+
+                // When the animation ends, we clean the classes and resolve the Promise
+                function handleAnimationEnd(event) {
+                    animationEndHandler();
+                    event.stopPropagation();
+                    element.classList.remove(`${prefix}animated`, animationName);
+                    resolve('Animation ended');
+                }
+
+                element.addEventListener('animationend', handleAnimationEnd, {once: true});
+            });
+
+        const allowedKeys = [
+            ".",
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "Enter"
+        ];
+
+        const disabledKeys = [
+            "r",
+            "Space",
+            "Backspace",
+            "Meta",
+            "Control",
+            "Option",
+            "Shift",
+            "Tab"
+        ];
+
+        let start_screen = document.querySelector('#start_screen');
+        let play_screen = document.querySelector('#play_screen');
+        let game_over_screen = document.querySelector ('#game_over_screen');
+
+        let game_over_high_score_screen = document.querySelector('#game_over_high_score');
+        let game_over_not_high_score = document.querySelector('#game_over_not_high_score');
+        let game_over_not_hs = document.querySelector('#game_over_not_hs');
+
+        let textfield = document.querySelector('#typing_field');
+        let error = document.querySelector('#error');
+        let final_digit = document.querySelector('#final');
+
+        let display_name_field = document.querySelector('#display_name');
+
+        let time = document.querySelector('#time');
+        let digit = document.querySelector('#digit');
+
+        function endPos(end) {
+            let len = end.value.length;
+
+            // Mostly for Web Browsers
+            if (end.setSelectionRange) {
+                end.focus();
+                end.setSelectionRange(len, len);
+            } else if (end.createTextRange) {
+                let t = end.createTextRange();
+                t.collapse(true);
+                t.moveEnd('character', len);
+                t.moveStart('character', len);
+                t.select();
+            }
+        }
+
+        function startGame() {
+            game_running = true;
+            start_screen.style.display = 'none';
+            play_screen.style.display = 'block';
+            textfield.disabled = false;
+            textfield.focus();
+        }
+
+        function endGame() {
+            game_running = false;
+            window.clearInterval(timer_interval);
+            timer_interval = null;
+            textfield.disabled = true;
+            play_screen.style.display = 'none';
+
+            time.innerText = "";
+            digit = "";
+
+            game_over_screen.style.display = 'block';
+
+            window.focus();
+
+            let game_over_digits = document.querySelector('#gameover_digit');
+
+            let final = current_position;
+            let high_score = getCookie('pi_high_score');
+
+            if (!high_score) {
+                high_score = -1;
+            }
+
+            if (final > 1) {
+                final--;
+            }
+
+            final_digit.value = final.toString();
+
+            if (final > high_score) {
+                game_over_high_score_screen.style.display = "block";
+                game_over_not_high_score.style.display = "none"
+                display_name_field.value = getCookie('pi_name');
+            } else {
+                game_over_not_high_score.style.display = "block";
+                game_over_high_score_screen.style.display = "none";
+                game_over_not_hs.innerText = getCookie('pi_high_score');
+            }
+
+            game_over_digits.innerText = final;
+        }
+
+        function startTimer () {
+            current_time = Math.trunc(new Date().getTime() / 1000);
+            end_time = current_time + 31;
+            timer_interval = window.setInterval(updateTimer, 1000);
+            time.innerText = (Math.abs(end_time - current_time) % 60).toString();
+        }
+
+        function updateTimer () {
+            current_time = Math.trunc(new Date().getTime() / 1000);
+            let seconds = Math.abs(end_time - current_time) % 60;
+            time.innerText = seconds.toString();
+            if (seconds <= 0) {
+                endGame();
+            }
+        }
+
+        function wrong() {
+            textfield.style.borderColor = "red";
+            textfield.style.borderWidth = "5px";
+            textfield.disabled = true;
+            error.style.display = 'block';
+            animateCSS(textfield, 'headShake', () => {
+                textfield.style.borderColor = "slategrey";
+                textfield.style.borderWidth = "1px";
+                textfield.disabled = false;
+                textfield.focus();
+                error.style.display = 'none';
+            });
+        }
+
+        function processKeyDown(event) {
+            if (!game_running) {
+                return;
+            }
+            if (event.isComposing || event.keyCode === 229) {
+                return;
+            } else if (allowedKeys.includes(event.key)) {
+                if (!timer_interval) {
+                    startTimer();
+                } else if (textfield.disabled) {
+                    return;
+                }
+
+                if (event.key !== piDigits[current_position]) {
+                    wrong();
+                    return event.preventDefault();
+                }
+
+                current_position++;
+                digit.innerText = piDigits[current_position];
+                return;
+            } else if (disabledKeys.includes(event.key)) {
+                event.preventDefault();
+                return;
+            }
+            wrong();
+            return event.preventDefault();
+        }
+
+        textfield.addEventListener('keydown', processKeyDown);
+        textfield.addEventListener('click', function (e) {
+            e.preventDefault();
+            endPos(this);
+        })
+
+        function getCookie(cname) {
+          let name = cname + "=";
+          let decodedCookie = decodeURIComponent(document.cookie);
+          let ca = decodedCookie.split(';');
+          for(let i = 0; i <ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') {
+              c = c.substring(1);
+            }
+            if (c.indexOf(name) === 0) {
+              return c.substring(name.length, c.length);
+            }
+          }
+          return null;
+        }
+
+        function setCookie(cname, cvalue) {
+          document.cookie = cname + "=" + cvalue + ";" + "path=/";
+        }
+
+    </script>
+{% endblock %}

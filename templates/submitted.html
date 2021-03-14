@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Happy Pi Day!</h2>
+
+    <p style="text-align: center;">
+        <i>Your rank:</i><br>
+        <span id="digit" style="font-size: 50px;">#{{ rank }}</span>
+    </p>
+
+    <p>
+        Your high score has been submitted!
+    </p>
+
+    <a href="." class="button">Play Again</a>
+    <a href="{{ url_for('leaderboard') }}" class="button">Leaderboard</a>
+{% endblock %}
