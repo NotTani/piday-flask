@@ -8,9 +8,16 @@
                 <p>Your high score has been submitted. Thank you for playing! Click Start below
                 to play again.</p>
             {% else %}
-                <p>The game is simple! Simply copy the digits of Pi from the middle of the screen to the
+                <p>The game is simple! Simply copy the digits of Pi (or &tau;) from the middle of the screen to the
                     bottom, being careful not to make any mistakes.</p>
             {% endif %}
+            <label for="pi_or_tao">Select what number to use (I will judge you for this).</label>
+            <select id="pi_or_tao" style="width: 100%;">
+                <option value="pi">Pi &pi; &mdash; 3.14159</option>
+                <option value="tau">Tau &tau; &mdash; 6.2831853071</option>
+                <option value="phi">Phi &phi; &mdash; 1.61803</option>
+                <option value="e">E &mdash; 2.7182818</option>
+            </select>
             <a class="button" href="#" onclick="startGame();">Start</a>
         </div>
         <div id="play_screen" style="display:none;">
@@ -57,6 +64,17 @@
     <script>
         const piDigits = "3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534" +
             "211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196";
+        const tauDigits = "6.28318530717958647692528676655900576839433879875021164194988918461563281257241799" +
+            "7256069650684234135964296173026564613294187689219101164463450718816256962234900568205403877042211119" +
+            "2892458979098607639288576219513318668922569512964675735663305424038182";
+        const phiDigits = "1.6180339887498948482045868343656381177203091798057628621354486227052604628189024497072072041" +
+            "89391137484754088075386891752126633862223536931793180060766726354433389086595939582905638322661319928290267" +
+            "880675208766892501711696207032221043216269548626296313614438149758701220340805887954454749246185695364"
+        const eDigits = "2.718281828459045235360287471352662497757247093699959574966967627724076630353547594571382178" +
+                        "5251664274274663919320030599218174135966290435729003342952605956307381323";
+
+        let using = piDigits;
+
 
         let current_position = 0;
         let current_time = 0;
@@ -108,6 +126,9 @@
             "Shift",
             "Tab"
         ];
+
+        let number_display = document.querySelector('#number_display');
+        let pi_or_tao_selector = document.querySelector('#pi_or_tao');
 
         let start_screen = document.querySelector('#start_screen');
         let play_screen = document.querySelector('#play_screen');
@@ -235,13 +256,13 @@
                     return;
                 }
 
-                if (event.key !== piDigits[current_position]) {
+                if (event.key !== using[current_position]) {
                     wrong();
                     return event.preventDefault();
                 }
 
                 current_position++;
-                digit.innerText = piDigits[current_position];
+                digit.innerText = using[current_position];
                 return;
             } else if (disabledKeys.includes(event.key)) {
                 event.preventDefault();
@@ -255,6 +276,23 @@
         textfield.addEventListener('click', function (e) {
             e.preventDefault();
             endPos(this);
+        });
+
+        pi_or_tao_selector.addEventListener('change', function () {
+            if (this.value === 'pi') {
+                number_display.innerHTML = '&pi;';
+                using = piDigits;
+            } else if (this.value === 'tau') {
+                number_display.innerHTML = '&tau;';
+                using = tauDigits;
+            } else if (this.value === 'phi') {
+                number_display.innerHTML = '&phi;'
+                using = phiDigits;
+            } else if (this.value === 'e') {
+                number_display.innerHTML = 'E';
+                using = eDigits;
+            }
+            digit.innerText = using[0];
         })
 
         function getCookie(cname) {
